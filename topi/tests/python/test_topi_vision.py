@@ -50,7 +50,7 @@ def verify_get_valid_counts(dshape, score_threshold):
         tvm.testing.assert_allclose(tvm_out1.asnumpy(), np_out1, rtol=1e-3)
         tvm.testing.assert_allclose(tvm_out2.asnumpy(), np_out2, rtol=1e-3)
 
-    for device in ['llvm']:
+    for device in ['llvm', 'cuda', 'opencl']:
         check_device(device)
 
 
@@ -108,7 +108,7 @@ def test_non_max_suppression():
         f(tvm_data, tvm_valid_count, tvm_indices_out)
         tvm.testing.assert_allclose(tvm_indices_out.asnumpy(), np_indices_result, rtol=1e-4)
 
-    for device in ['llvm']:
+    for device in ['llvm', 'cuda', 'opencl']:
         check_device(device)
 
 
@@ -215,7 +215,7 @@ def test_multibox_detection():
         f(tvm_cls_prob, tvm_loc_preds, tvm_anchors, tvm_out)
         tvm.testing.assert_allclose(tvm_out.asnumpy(), expected_np_out, rtol=1e-4)
 
-    for device in ['llvm', 'opencl']:
+    for device in ['llvm', 'opencl', 'cuda']:
         check_device(device)
 
 
@@ -259,7 +259,7 @@ def verify_roi_align(batch, in_channel, in_size, num_roi, pooled_size, spatial_s
         f(tvm_a, tvm_rois, tvm_b)
         tvm.testing.assert_allclose(tvm_b.asnumpy(), b_np, rtol=1e-3)
 
-    for device in ['llvm', 'cuda']:
+    for device in ['llvm', 'cuda', 'opencl']:
         check_device(device)
 
 
