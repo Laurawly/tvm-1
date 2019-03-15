@@ -482,12 +482,6 @@ def _mx_box_nms(inputs, attrs):
     id_index = attrs.get_int('id_index', -1)
     in_format = attrs.get_str('in_format', 'corner')
     out_format = attrs.get_str('out_format', 'corner')
-    if coord_start != 2:
-        raise RuntimeError('coord_start %s is not supported.' % coord_start)
-    if score_index != 1:
-        raise RuntimeError('score_index %s is not supported.' % score_index)
-    if id_index != -1 and int(id_index) != 0:
-        raise RuntimeError('id_index %s is not supported.' % id_index)
     if in_format != 'corner':
         raise RuntimeError('in_format %s is not supported.' % in_format)
     if out_format != 'corner':
@@ -499,6 +493,8 @@ def _mx_box_nms(inputs, attrs):
                                              iou_threshold=iou_thresh,
                                              force_suppress=force_suppress,
                                              top_k=top_k,
+                                             coord_start=coord_start,
+                                             score_index=score_index,
                                              id_index=id_index,
                                              return_indices=False,
                                              invalid_to_bottom=True)
