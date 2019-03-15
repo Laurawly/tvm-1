@@ -89,6 +89,8 @@ Expr MakeNMS(Expr data,
              double iou_threshold,
              bool force_suppress,
              int top_k,
+             int coord_start,
+             int score_index,
              int id_index,
              bool return_indices,
              bool invalid_to_bottom) {
@@ -97,6 +99,8 @@ Expr MakeNMS(Expr data,
   attrs->iou_threshold = iou_threshold;
   attrs->force_suppress = force_suppress;
   attrs->top_k = top_k;
+  attrs->coord_start = coord_start;
+  attrs->score_index = score_index;
   attrs->id_index = id_index;
   attrs->return_indices = return_indices;
   attrs->invalid_to_bottom = invalid_to_bottom;
@@ -107,7 +111,7 @@ Expr MakeNMS(Expr data,
 
 TVM_REGISTER_API("relay.op.vision._make.non_max_suppression")
 .set_body([](const TVMArgs& args, TVMRetValue* rv) {
-  runtime::detail::unpack_call<Expr, 9>(MakeNMS, args, rv);
+  runtime::detail::unpack_call<Expr, 11>(MakeNMS, args, rv);
 });
 
 
