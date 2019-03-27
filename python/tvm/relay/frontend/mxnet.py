@@ -715,7 +715,7 @@ _convert_map = {
     "_contrib_MultiBoxDetection" : _mx_multibox_detection,
     "_contrib_ROIAlign" : _mx_roi_align,
     "ROIPooling"        : _mx_roi_pooling,
-    "AdaptiveAvgPooling2D" : _mx_adaptive_pooling,
+    "_contrib_AdaptiveAvgPooling2D" : _mx_adaptive_pooling,
     "_contrib_Proposal" : _mx_proposal,
     "_contrib_MultiProposal" : _mx_proposal,
     "_contrib_box_nms" : _mx_box_nms,
