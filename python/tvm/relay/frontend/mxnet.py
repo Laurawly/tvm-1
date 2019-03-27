@@ -163,7 +163,6 @@ def _mx_pooling(inputs, attrs):
 
 def _mx_adaptive_pooling(inputs, attrs):
     output_size = attrs.get_int_tupple("output_size", [])
-    print(output_size)
     if output_size != 1:
        raise RuntimeError("AdaptiveAvgPooling with output_size other than 1 is not supported yet.")
     return _op.nn.global_avg_pool2d(inputs[0])
