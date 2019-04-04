@@ -528,21 +528,31 @@ def test_forward_bilinear_resize():
     verify_mxnet_frontend_impl(mx_sym, (1, 2, 3, 4), (1, 2, 5, 10))
 
 def test_forward_conv2d_transpose():
-    def verify(dshape, kshape, kernel, stride, pad, num_filter, no_bias):
-        x_data = np.random.uniform(size=shape=dshape).astype("float32")
+    def verify(dshape, kshape, bshape, kernel, num_filter, no_bias):
+    def verify(batch, in_channel, in_size, num_filter, kernel, stride, padding):
+        in_height = in_width = in_size
+        dshape = (batch, in_channel, in_height, in_width)
+        kshape = (in_channel, num_filter, kernel, kernel)
+        kernel_size = (kernel, kernel)
+        stride = (stride, stride)
+        pad = (padding, padding)
+        x_data = np.random.uniform(size=dshape).astype("float32")
         w_data = np.random.uniform(size=kshape).astype("float32")
-        ref_res = mx.nd.Deconvolution(mx.nd.array(x_data), mx.nd.array(w_data), kernel=kernel, stride=stride, pad=pad, num_filter=num_filter, no_bias=no_bias)
-        mx_sym = mx.sym.Deconvolution(mx.sym.var("x"), mx.sym.var("w"), kernel=kernel, stride=stride, pad=pad, num_filter=num_filter, no_bias=no_bias)
-        new_sym, _ = relay.frontend.from_mxnet(mx_sym, {"x": dshape, "w": kshape})
+        b_data = np.random.uniform(size=bshape).astype("float32")
+        ref_res = mx.nd.Deconvolution(mx.nd.array(x_data), mx.nd.array(w_data), mx.nd.array(b_data), kernel=kernel, num_filter=num_filter, no_bias=no_bias)
+        mx_sym = mx.sym.Deconvolution(mx.sym.var("x"), mx.sym.var("w"), mx.sym.var("b"), kernel=kernel, num_filter=num_filter, no_bias=no_bias)
+        new_sym, _ = relay.frontend.from_mxnet(mx_sym, {"x": dshape, "w": kshape, "b": bshape})
         for target, ctx in ctx_list():
             for kind in ["graph", "debug"]:
                 intrp = relay.create_executor(kind, ctx=ctx, target=target)
                 op_res = intrp.evaluate(new_sym)(x_data, w_data)
                 tvm.testing.assert_allclose(op_res.asnumpy(), ref_res.asnumpy())
-    verify((1000, 2048, 7, 7), (2048, 256, 2, 2))
+    verify((1000, 2048, 7, 7), (2048, 256, 2, 2), (256,), num_filter=256, kernel=(2, 2), no_bias = False)
 
 
 if __name__ == '__main__':
+    test_forward_conv2d_transpose()
+    '''
     test_forward_mlp()
     test_forward_vgg()
     test_forward_resnet()
@@ -580,3 +590,4 @@ if __name__ == '__main__':
     test_forward_take()
     test_forward_gather_nd()
     test_forward_bilinear_resize()
+    '''
