@@ -527,6 +527,20 @@ def test_forward_bilinear_resize():
     mx_sym = mx.sym.contrib.BilinearResize2D(data, height=5, width=10)
     verify_mxnet_frontend_impl(mx_sym, (1, 2, 3, 4), (1, 2, 5, 10))
 
+def test_forward_conv2d_transpose():
+    def verify(dshape, kshape, kernel, stride, pad, num_filter, no_bias):
+        x_data = np.random.uniform(size=shape=dshape).astype("float32")
+        w_data = np.random.uniform(size=kshape).astype("float32")
+        ref_res = mx.nd.Deconvolution(mx.nd.array(x_data), mx.nd.array(w_data), kernel=kernel, stride=stride, pad=pad, num_filter=num_filter, no_bias=no_bias)
+        mx_sym = mx.sym.Deconvolution(mx.sym.var("x"), mx.sym.var("w"), kernel=kernel, stride=stride, pad=pad, num_filter=num_filter, no_bias=no_bias)
+        new_sym, _ = relay.frontend.from_mxnet(mx_sym, {"x": dshape, "w": kshape})
+        for target, ctx in ctx_list():
+            for kind in ["graph", "debug"]:
+                intrp = relay.create_executor(kind, ctx=ctx, target=target)
+                op_res = intrp.evaluate(new_sym)(x_data, w_data)
+                tvm.testing.assert_allclose(op_res.asnumpy(), ref_res.asnumpy())
+    verify((1000, 2048, 7, 7), (2048, 256, 2, 2))
+
 
 if __name__ == '__main__':
     test_forward_mlp()
