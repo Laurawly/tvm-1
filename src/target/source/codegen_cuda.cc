@@ -172,13 +172,21 @@ void CodeGenCUDA::PrintType(DataType t, std::ostream& os) {  // NOLINT(*)
           os << "int16_t"; return;
         } else if (t.lanes() == 8) {
           // directly 8 4-bit int in integer.
+          enable_int4_ = true;
           os << "int"; return;
         } else if (t.lanes() == 16) {
+          enable_int4_ = true;
           os << "int2"; return;
         } else if (t.lanes() == 32) {
           os << "int4"; return;
         } else if (t.lanes() == 64) {
           os << "int8"; return;
+        } else if (!t.is_uint() && t.lanes() == 1) {
+          os << "wmma::experimental::precision::s4";
+          break;
+        } else if (t.is_uint() && t.lanes() == 1) {
+          os << "wmma::experimental::precision::u4";
+          break;
         } else {
           LOG(FATAL) << "Cannot convert type " << t << " to CUDA type!";
         }

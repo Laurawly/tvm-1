@@ -39,7 +39,7 @@ class CodeGenCUDA final : public CodeGenC {
   void Init(bool output_ssa);
   std::string Finish();
   bool need_include_path() {
-    return (enable_fp16_ || enable_int8_ || need_math_constants_h_ || need_mma_h_);
+    return (enable_fp16_ || enable_int8_ || enable_int4_ || need_math_constants_h_ || need_mma_h_);
   }
   // override behavior
   void PrintFuncPrefix() final;
@@ -88,6 +88,8 @@ class CodeGenCUDA final : public CodeGenC {
   bool enable_fp16_{false};
   // whether enable int8
   bool enable_int8_{false};
+  // whether enable int4
+  bool enable_int4_{false};
   // whether need math_constants.h
   bool need_math_constants_h_{false};
   // whether need mma.h
