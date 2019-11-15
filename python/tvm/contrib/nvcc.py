@@ -252,6 +252,20 @@ def have_int8(compute_version):
 
     return False
 
+def have_int4(compute_version):
+    """Either int4 support is provided in the compute capability or not
+
+    Parameters
+    ----------
+    compute_version : str
+        compute capability of a GPU (e.g. "6.1")
+    """
+    major, _ = parse_compute_version(compute_version)
+    if major >= 7.5:
+        return True
+
+    return False
+
 def have_tensorcore(compute_version):
     """Either TensorCore support is provided in the compute capability or not
 
