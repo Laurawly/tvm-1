@@ -158,7 +158,7 @@ void CodeGenCUDA::PrintType(Type t, std::ostream& os) {  // NOLINT(*)
         } else if (t.lanes() == 32) {
           os << "int"; return;
         } else {
-          LOG(FATAL) << "Cannot convert type " << t << " to CUDA type, int1 handling need more impl for lane " << t.lanes();
+          LOG(FATAL) << "Cannot convert type " << t << " to CUDA type!";
         }
       }
       case 4: {
@@ -176,7 +176,7 @@ void CodeGenCUDA::PrintType(Type t, std::ostream& os) {  // NOLINT(*)
         } else if (t.lanes() == 64) {
           os << "int8"; return;
         } else {
-          LOG(FATAL) << "Cannot convert type " << t << " to CUDA type, int4 handling need more impl for lane " << t.lanes();
+          LOG(FATAL) << "Cannot convert type " << t << " to CUDA type!";
         }
       }
       case 8: {
@@ -441,8 +441,10 @@ void CodeGenCUDA::VisitStmt_(const Allocate* op) {
     std::string scope = alloc_storage_scope_.at(buffer);
     if (scope.find("wmma.") == 0) {
       if (scope == "wmma.matrix_a" || scope == "wmma.matrix_b") {
-        CHECK(op->type == Float(16) || op->type == Int(8) || op->type == UInt(8)  || op->type == Int(4) || op->type == Int(1))
-          << "Matrix_a and matrix_b only support half or char or unsigned char or uint4 or int4 or int1 type for now";
+        CHECK(op->type == Float(16) || op->type == Int(8) || op->type == UInt(8)
+              || op->type == Int(4) || op->type == Int(1))
+          << "Matrix_a and matrix_b only support half or char or unsigned char "
+          << "or uint4 or int4 or int1 type for now";
       } else {
         CHECK(op->type == Float(16) || op->type == Float(32) || op->type == Int(32))
           << "Accumulator only support half, float and int type for now";
