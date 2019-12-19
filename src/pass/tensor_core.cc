@@ -200,7 +200,11 @@ class MMAMatcher: public IRVisitor {
     BufferInfo buffer_a;
     if (!check_local_buffer_(load_a, &buffer_a)
         || !(buffer_a.dtype == Float(16) ||
-             buffer_a.dtype == Int(8))) {
+             buffer_a.dtype == Int(8) ||
+             buffer_a.dtype == UInt(8) ||
+             buffer_a.dtype == Int(4) ||
+             buffer_a.dtype == UInt(4) ||
+             buffer_a.dtype == Int(1))) {
       return false;
     }
 
@@ -209,7 +213,11 @@ class MMAMatcher: public IRVisitor {
     BufferInfo buffer_b;
     if (!check_local_buffer_(load_b, &buffer_b)
         || !(buffer_b.dtype == Float(16) ||
-             buffer_b.dtype == Int(8))) {
+             buffer_b.dtype == Int(8) ||
+             buffer_b.dtype == UInt(8) ||
+             buffer_b.dtype == Int(4) ||
+             buffer_a.dtype == UInt(4) ||
+             buffer_a.dtype == Int(1))) {
       return false;
     }
 
@@ -740,6 +748,17 @@ class BufferAnalyser : public IRVisitor {
         warp_tile_.k == 16) {
       return true;
     }
+    if (warp_tile_.m == 8 &&
+        warp_tile_.n == 8 &&
+        warp_tile_.k == 32) {
+      return true;
+    }
+    if (warp_tile_.m == 8 &&
+        warp_tile_.n == 8 &&
+        warp_tile_.k == 128) {
+      return true;
+    }
+
     return false;
   }
 
@@ -873,18 +892,29 @@ class TensorCoreIRMutator : public IRMutator {
       NodePtr<BufferNode> buffer_node_c = make_node<BufferNode>();
 
       auto mma_sync_call =
-        [&buffer_node_a, &buffer_node_b]
+        [&buffer_node_a, &buffer_node_b, &ca, &cb]
         (const Buffer &buffer) {
           Buffer buffer_a(buffer_node_a);
           Buffer buffer_b(buffer_node_b);
-          return Evaluate::make(
-                  Call::make(Handle(),
-                        intrinsic::tvm_mma_sync,
-                        {buffer->data, buffer->elem_offset,
-                        buffer_a->data, buffer_a->elem_offset,
-                        buffer_b->data, buffer_b->elem_offset,
-                        buffer->data, buffer->elem_offset},
-                        Call::Intrinsic));
+          if (ca->type == Int(1) && cb->type == Int(1)) {
+            return Evaluate::make(
+                    Call::make(Handle(),
+                          intrinsic::tvm_bmma_sync,
+                          {buffer->data, buffer->elem_offset,
+                          buffer_a->data, buffer_a->elem_offset,
+                          buffer_b->data, buffer_b->elem_offset,
+                          buffer->data, buffer->elem_offset},
+                          Call::Intrinsic));
+          } else {
+            return Evaluate::make(
+                    Call::make(Handle(),
+                          intrinsic::tvm_mma_sync,
+                          {buffer->data, buffer->elem_offset,
+                          buffer_a->data, buffer_a->elem_offset,
+                          buffer_b->data, buffer_b->elem_offset,
+                          buffer->data, buffer->elem_offset},
+                          Call::Intrinsic));
+          }
         };
 
       auto call_add_c =

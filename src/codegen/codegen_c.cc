@@ -169,8 +169,12 @@ std::string CodeGenC::GetBufferRef(
     } else {
       os << vid;
     }
-    os << '[';
+    os << "[(";
     PrintExpr(index, os);
+    os << ")";
+    if (t.bits() == 4 || t.bits() == 1) {
+      os << " / " << (32 / t.bits());
+    }
     os << ']';
   } else {
     // Buffer declared as vector type.
@@ -204,8 +208,12 @@ std::string CodeGenC::GetBufferRef(
       PrintType(t.element_of(), os);
       os << "*)";
     }
-    os << vid << " + ";
+    os << vid << " + (";
     PrintExpr(index, os);
+    os << ")";
+    if (t.bits() == 4 || t.bits() == 1) {
+      os << " / " << (32 / t.bits());
+    }
     os << "))[0]";
   }
   return os.str();
@@ -796,8 +804,7 @@ void CodeGenC::VisitStmt_(const Allocate* op) {
     PrintStorageScope(scope, stream);
     stream << ' ';
     PrintType(op->type, stream);
-    stream << ' '<< vid << '['
-           << constant_size << "];\n";
+    stream << ' '<< vid << '[' << constant_size << "];\n";
   }
   RegisterHandleType(op->buffer_var.get(), op->type);
   this->PrintStmt(op->body);
