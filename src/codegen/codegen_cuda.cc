@@ -441,8 +441,10 @@ void CodeGenCUDA::VisitStmt_(const Allocate* op) {
     std::string scope = alloc_storage_scope_.at(buffer);
     if (scope.find("wmma.") == 0) {
       if (scope == "wmma.matrix_a" || scope == "wmma.matrix_b") {
-        CHECK(op->type == Float(16) || op->type == Int(8) || op->type == UInt(8)
-              || op->type == Int(4) || op->type == Int(1))
+        CHECK(op->type == Float(16)
+              || op->type == Int(8) || op->type == UInt(8)
+              || op->type == Int(4) || op->type == UInt(4)
+              || op->type == Int(1))
           << "Matrix_a and matrix_b only support half or char or unsigned char "
           << "or uint4 or int4 or int1 type for now";
       } else {
