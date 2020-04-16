@@ -129,7 +129,7 @@ def intrin_wmma_load_matrix_W(strides_dst, strides_from, shape, layout, A_shape,
         warp_index = BC.elem_offset // row + BC.elem_offset % row // wmma_n
         ib.emit(tvm.tir.call_intrin('handle', 'tvm_load_matrix_sync',
                                     BC.data, wmma_m, wmma_n, wmma_k, warp_index,
-                                    BA.access_ptr('r'), strides_from[0], layout))
+                                    BA.access_ptr('r'), wmma_k, layout))
         return ib.get()
 
     return te.decl_tensor_intrin(C.op, intrin_func, binds={A: BA, C: BC})
