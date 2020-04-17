@@ -35,9 +35,9 @@ def schedule_deformable_conv2d_nchw(cfg, outs):
 
     Parameters
     ----------
-    cfg: ConfigEntity	
+    cfg: ConfigEntity
         The config for this template
-        
+
     outs: Array of Tensor
         The computation graph description of conv2d
         in the format of an array of tensors.
@@ -69,9 +69,17 @@ def schedule_deformable_conv2d_nchw(cfg, outs):
 def _schedule_direct_cuda(s, conv):
     """Schedule template of deformable conv2d"""
     data_deform, kernel = s[conv].op.input_tensors
-    n, c, kh, kw, y, x = tuple(data_deform.op.axis) + tuple(data_deform.op.reduce_axis)
-    n, f, y, x, rc, ry, rx = tuple(conv.op.axis) + tuple(conv.op.reduce_axis)
-    conv_local, = s.cache_write([conv], "local")
+    if conv.op in s.outputs:
+        # output is conv
+        conv_local = s.cache_write(conv, 'local')
+    else:
+        s[conv].set_scope('local')
+        conv_local = conv
+        # output is relu but named conv
+        conv = s.outputs[0].output(0)
+
+    n, c, kh, kw, _, _ = tuple(data_deform.op.axis)
+    n, f, y, x = tuple(conv.op.axis)
     n_c, f_c, y_c, x_c, rc, ry, rx = tuple(conv_local.op.axis) + tuple(conv_local.op.reduce_axis)
     n_c_o_i, n_c_i = s[conv_local].split(n_c, factor=1)
     n_c_o_o_i, n_c_o_i = s[conv_local].split(n_c_o_i, factor=1)
