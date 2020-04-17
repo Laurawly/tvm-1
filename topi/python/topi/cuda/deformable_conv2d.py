@@ -22,6 +22,7 @@ from tvm import autotvm
 from .. import nn
 from ..util import traverse_inline
 
+
 @autotvm.register_topi_compute("deformable_conv2d_nchw.cuda")
 def deformable_conv2d_nchw(cfg, data, offset, kernel, strides, padding, dilation,
                            deformable_groups, groups, out_dtype):
@@ -34,6 +35,9 @@ def schedule_deformable_conv2d_nchw(cfg, outs):
 
     Parameters
     ----------
+    cfg: ConfigEntity	
+        The config for this template
+        
     outs: Array of Tensor
         The computation graph description of conv2d
         in the format of an array of tensors.
@@ -45,6 +49,7 @@ def schedule_deformable_conv2d_nchw(cfg, outs):
     """
     outs = [outs] if isinstance(outs, te.tensor.Tensor) else outs
     s = te.create_schedule([x.op for x in outs])
+    '''
     conv = outs[0]
 
     op_tag = conv.op.tag
@@ -53,7 +58,17 @@ def schedule_deformable_conv2d_nchw(cfg, outs):
     else:
         raise ValueError('Tag is expected to be deformable_conv2d_nchw. \
                     Got {0}'.format(op_tag))
+    '''
+    def _callback(op):
+        if op.tag == 'deformable_conv2d_nchw':
+            _schedule_direct_cuda(s, op.output(0))
 
+    traverse_inline(s, outs[0].op, _callback)
+    return s
+
+def _schedule_direct_cuda(s, conv):
+    """Schedule template of deformable conv2d"""
+    data_deform, kernel = s[conv].op.input_tensors
     n, c, kh, kw, y, x = tuple(data_deform.op.axis) + tuple(data_deform.op.reduce_axis)
     n, f, y, x, rc, ry, rx = tuple(conv.op.axis) + tuple(conv.op.reduce_axis)
     conv_local, = s.cache_write([conv], "local")
@@ -120,5 +135,5 @@ def schedule_deformable_conv2d_nchw(cfg, outs):
     s[conv_local].pragma(n_c_o_o_o_o_f_c_o_o_o_o_fused_y_c_o_o_o_o_fused_x_c_o_o_o_o_fused, "unroll_explicit", True)
     s[data_deform].compute_inline()
 
-    return s
+    #return s
     
